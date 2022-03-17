@@ -17,7 +17,21 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.76">
+        app:layout_constraintVertical_bias="0.77">
+
+    </Button>
+
+    <Button
+        android:id="@+id/btnVerPhotograh"
+        android:layout_width="313dp"
+        android:layout_height="42dp"
+        android:backgroundTint="#4CAF50"
+        android:text="Ver Fotografias"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.844">
 
     </Button>
 
