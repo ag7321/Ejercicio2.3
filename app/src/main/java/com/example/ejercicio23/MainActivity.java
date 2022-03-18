@@ -15,6 +15,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -43,15 +45,18 @@ public class MainActivity extends AppCompatActivity {
     ImageView imageView;
     static final int PETICION_CAM = 100;
     static final int TAKE_PIC_REQUEST = 101;
-    String currentPhotoPath;
     Bitmap imgUser;
     SQLiteConexion conexion;
+    Bitmap image;
+    boolean validarfoto;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         conexion = new SQLiteConexion(this, Transacciones.NameDatabase,null,1);
+
+        validarfoto=false;
 
         txtDescripcion = (EditText) findViewById(R.id.textDescripcion);
         btnSalvar = (Button) findViewById(R.id.btnSalvar);
@@ -69,7 +74,19 @@ public class MainActivity extends AppCompatActivity {
         btnSalvar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                savePhotograh();
+                if(!validarfoto){
+                    Toast.makeText(getApplicationContext(), "Ingrese una imagen"
+                            ,Toast.LENGTH_LONG).show();
+                }else if(txtDescripcion.getText().toString().trim().isEmpty()){
+                    Toast.makeText(getApplicationContext(), "Ingrese una descripcion"
+                            ,Toast.LENGTH_LONG).show();
+                }else{
+                    savePhotograh();
+                    txtDescripcion.setText("");
+                    imageView.setImageResource(R.drawable.userr);
+                    validarfoto=false;
+                }
+
             }
         });
 
@@ -93,13 +110,7 @@ public class MainActivity extends AppCompatActivity {
 
         values.put(Transacciones.descripcion, txtDescripcion.getText().toString());
 
-        ByteArrayOutputStream bay = new ByteArrayOutputStream(10480);
-
-        imgUser.compress(Bitmap.CompressFormat.JPEG, 0 , bay);
-
-        byte[] bl = bay.toByteArray();
-
-        String img= Base64.encodeToString(bl,Base64.DEFAULT);
+        String img= encodeImage(imgUser);
 
         values.put(Transacciones.imagen, img);
 
@@ -136,49 +147,17 @@ public class MainActivity extends AppCompatActivity {
 
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        // Ensure that there's a camera activity to handle the intent
-        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            // Create the File where the photo should go
-            File photoFile = null;
 
-            try {
-                photoFile = createImageFile();
-            } catch (IOException ex) {
-                // Error occurred while creating the File
-                ex.toString();
-            }
-            // Continue only if the File was successfully created
-            try {
-                if (photoFile != null) {
-                    Uri photoURI = FileProvider.getUriForFile(this,
-                            "com.example.ejercicio23.fileprovider",
-                            photoFile);
+        if(takePictureIntent.resolveActivity(getPackageManager())!=null){
+            startActivityForResult(takePictureIntent, TAKE_PIC_REQUEST);
 
-                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
 
-                    startActivityForResult(takePictureIntent, TAKE_PIC_REQUEST);
-                }
-            }catch (Exception e){
-                Log.i("Error", "dispatchTakePictureIntent: " + e.toString());
-            }
         }
+
     }
 
-    private File createImageFile() throws IOException {
-        // Create an image file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
 
-        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        File image = File.createTempFile(
-                imageFileName,  /* prefix */
-                ".jpeg",         /* suffix */
-                storageDir      /* directory */
-        );
 
-        currentPhotoPath = image.getAbsolutePath();
-        return image;
-    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
@@ -187,10 +166,39 @@ public class MainActivity extends AppCompatActivity {
 
         if(requestCode == TAKE_PIC_REQUEST && resultCode == RESULT_OK){
 
-            Bitmap image = BitmapFactory.decodeFile(currentPhotoPath);
+            Bundle extras = data.getExtras();
+
+             image = (Bitmap) extras.get("data");
 
             imgUser = image;
             imageView.setImageBitmap(image);
+            validarfoto=true;
+
         }
     }
+
+    private String encodeImage(Bitmap bitmap){
+
+        int previewWidth = 150;
+        int previewHeight = bitmap.getHeight() * previewWidth / bitmap.getWidth();
+
+        Bitmap previewBitmap = Bitmap.createScaledBitmap(bitmap, previewWidth, previewHeight, false);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        previewBitmap.compress(Bitmap.CompressFormat.JPEG, 60, byteArrayOutputStream);
+        byte[] bytes = byteArrayOutputStream.toByteArray();
+
+        return Base64.encodeToString(bytes, Base64.DEFAULT);
+
+    }
+
+    private boolean hasImage(@NonNull ImageView view) {
+        Drawable drawable = view.getDrawable();
+        boolean hasImage = (drawable != null);
+        if (hasImage && (drawable instanceof BitmapDrawable)) {
+            hasImage = ((BitmapDrawable)drawable).getBitmap() != null;
+        }
+        return hasImage;
+    }
+
+
 }
