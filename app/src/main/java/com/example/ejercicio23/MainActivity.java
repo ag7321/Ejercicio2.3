@@ -150,8 +150,6 @@ public class MainActivity extends AppCompatActivity {
 
         if(takePictureIntent.resolveActivity(getPackageManager())!=null){
             startActivityForResult(takePictureIntent, TAKE_PIC_REQUEST);
-
-
         }
 
     }
@@ -191,14 +189,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private boolean hasImage(@NonNull ImageView view) {
-        Drawable drawable = view.getDrawable();
-        boolean hasImage = (drawable != null);
-        if (hasImage && (drawable instanceof BitmapDrawable)) {
-            hasImage = ((BitmapDrawable)drawable).getBitmap() != null;
-        }
-        return hasImage;
-    }
 
 
 }
